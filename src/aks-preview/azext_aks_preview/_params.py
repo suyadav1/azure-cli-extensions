@@ -1120,7 +1120,22 @@ def load_arguments(self, _):
         c.argument("opentelemetry_metrics_port",
                    is_preview=True,
                    type=int,
+                   deprecate_info=c.deprecate(
+                       target="--opentelemetry-metrics-port",
+                       redirect="--opentelemetry-metrics-port-http",
+                       hide=True,
+                   ),
                    help="Port for OpenTelemetry metrics collection"
+                   )
+        c.argument("opentelemetry_metrics_port_http",
+                   is_preview=True,
+                   type=int,
+                   help="HTTP/protobuf host port for OpenTelemetry metrics collection"
+                   )
+        c.argument("opentelemetry_metrics_port_grpc",
+                   is_preview=True,
+                   type=int,
+                   help="gRPC/protobuf host port for OpenTelemetry metrics collection"
                    )
         c.argument("disable_opentelemetry_metrics",
                    is_preview=True,
@@ -1131,17 +1146,50 @@ def load_arguments(self, _):
                    options_list=["--enable-opentelemetry-logs"],
                    is_preview=True,
                    action="store_true",
-                   help="Enable OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--enable-opentelemetry-logs",
+                       redirect="--enable-opentelemetry-logs-traces",
+                       hide=True,
+                   ),
+                   )
+        c.argument("enable_opentelemetry_logs_traces",
+                   options_list=["--enable-opentelemetry-logs-traces"],
+                   is_preview=True,
+                   action="store_true",
+                   help="Enable OpenTelemetry logs and traces collection"
                    )
         c.argument("opentelemetry_logs_port",
                    is_preview=True,
                    type=int,
-                   help="Port for OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--opentelemetry-logs-port",
+                       redirect="--opentelemetry-logs-traces-port-http",
+                       hide=True,
+                   ),
+                   )
+        c.argument("opentelemetry_logs_traces_port_http",
+                   is_preview=True,
+                   type=int,
+                   help="HTTP/protobuf host port for OpenTelemetry logs and traces collection"
+                   )
+        c.argument("opentelemetry_logs_traces_port_grpc",
+                   is_preview=True,
+                   type=int,
+                   help="gRPC/protobuf host port for OpenTelemetry logs and traces collection"
                    )
         c.argument("disable_opentelemetry_logs",
                    is_preview=True,
                    action="store_true",
-                   help="Disable OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--disable-opentelemetry-logs",
+                       redirect="--disable-opentelemetry-logs-traces",
+                       hide=True,
+                   ),
+                   )
+        c.argument("disable_opentelemetry_logs_traces",
+                   is_preview=True,
+                   action="store_true",
+                   help="Disable OpenTelemetry logs and traces collection"
                    )
         c.argument("enable_cost_analysis",
                    action="store_true"
@@ -1634,7 +1682,22 @@ def load_arguments(self, _):
         c.argument("opentelemetry_metrics_port",
                    is_preview=True,
                    type=int,
+                   deprecate_info=c.deprecate(
+                       target="--opentelemetry-metrics-port",
+                       redirect="--opentelemetry-metrics-port-http",
+                       hide=True,
+                   ),
                    help="Port for OpenTelemetry metrics collection"
+                   )
+        c.argument("opentelemetry_metrics_port_http",
+                   is_preview=True,
+                   type=int,
+                   help="HTTP/protobuf host port for OpenTelemetry metrics collection"
+                   )
+        c.argument("opentelemetry_metrics_port_grpc",
+                   is_preview=True,
+                   type=int,
+                   help="gRPC/protobuf host port for OpenTelemetry metrics collection"
                    )
         c.argument("disable_opentelemetry_metrics",
                    is_preview=True,
@@ -1644,17 +1707,49 @@ def load_arguments(self, _):
         c.argument("enable_opentelemetry_logs",
                    is_preview=True,
                    action="store_true",
-                   help="Enable OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--enable-opentelemetry-logs",
+                       redirect="--enable-opentelemetry-logs-traces",
+                       hide=True,
+                   ),
+                   )
+        c.argument("enable_opentelemetry_logs_traces",
+                   is_preview=True,
+                   action="store_true",
+                   help="Enable OpenTelemetry logs and traces collection"
                    )
         c.argument("opentelemetry_logs_port",
                    is_preview=True,
                    type=int,
-                   help="Port for OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--opentelemetry-logs-port",
+                       redirect="--opentelemetry-logs-traces-port-http",
+                       hide=True,
+                   ),
+                   )
+        c.argument("opentelemetry_logs_traces_port_http",
+                   is_preview=True,
+                   type=int,
+                   help="HTTP/protobuf host port for OpenTelemetry logs and traces collection"
+                   )
+        c.argument("opentelemetry_logs_traces_port_grpc",
+                   is_preview=True,
+                   type=int,
+                   help="gRPC/protobuf host port for OpenTelemetry logs and traces collection"
                    )
         c.argument("disable_opentelemetry_logs",
                    is_preview=True,
                    action="store_true",
-                   help="Disable OpenTelemetry logs collection"
+                   deprecate_info=c.deprecate(
+                       target="--disable-opentelemetry-logs",
+                       redirect="--disable-opentelemetry-logs-traces",
+                       hide=True,
+                   ),
+                   )
+        c.argument("disable_opentelemetry_logs_traces",
+                   is_preview=True,
+                   action="store_true",
+                   help="Disable OpenTelemetry logs and traces collection"
                    )
         c.argument(
             "enable_vpa",

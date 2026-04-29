@@ -7900,7 +7900,78 @@ class AKSPreviewManagedClusterCreateDecoratorTestCase(unittest.TestCase):
         )
         self.assertEqual(dec_mc_1, ground_truth_mc_1)
 
-    def test_azure_monitor_logs_containerinsights_enabled_simple(self):
+    def test_set_up_azure_monitor_profile_with_new_logs_traces_flag(self):
+        """Test enabling OpenTelemetry logs/traces using the new --enable-opentelemetry-logs-traces flag."""
+        dec_1 = AKSPreviewManagedClusterCreateDecorator(
+            self.cmd,
+            self.client,
+            {
+                "enable_addons": "monitoring",
+                "workspace_resource_id": "/subscriptions/test/resourceGroups/test/providers/Microsoft.OperationalInsights/workspaces/test-workspace",
+                "enable_opentelemetry_logs_traces": True,
+                "opentelemetry_logs_traces_port_http": 9090,
+                "opentelemetry_logs_traces_port_grpc": 9091,
+            },
+            CUSTOM_MGMT_AKS_PREVIEW,
+        )
+
+        mc_1 = self.models.ManagedCluster(
+            location="test_location",
+            identity=self.models.ManagedClusterIdentity(type="SystemAssigned"),
+        )
+        dec_1.context.attach_mc(mc_1)
+        dec_1.context.set_intermediate("subscription_id", "test-subscription-id")
+
+        external_functions = dec_1.context.external_functions
+        with patch.object(external_functions, 'ensure_container_insights_for_monitoring', return_value=None):
+            dec_mc_1 = dec_1.set_up_addon_profiles(mc_1)
+
+        dec_mc_1 = dec_1.set_up_azure_monitor_profile(dec_mc_1)
+
+        self.assertIsNotNone(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_logs_and_traces)
+        self.assertTrue(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_logs_and_traces.enabled)
+        self.assertEqual(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_logs_and_traces.http_port, 9090)
+        self.assertEqual(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_logs_and_traces.grpc_port, 9091)
+
+    def test_set_up_azure_monitor_profile_with_grpc_ports(self):
+        """Test enabling OpenTelemetry metrics with gRPC port using new flags."""
+        dec_1 = AKSPreviewManagedClusterCreateDecorator(
+            self.cmd,
+            self.client,
+            {
+                "enable_azure_monitor_metrics": True,
+                "enable_opentelemetry_metrics": True,
+                "opentelemetry_metrics_port_http": 8080,
+                "opentelemetry_metrics_port_grpc": 8081,
+            },
+            CUSTOM_MGMT_AKS_PREVIEW,
+        )
+
+        mc_1 = self.models.ManagedCluster(
+            location="test_location",
+            identity=self.models.ManagedClusterIdentity(type="SystemAssigned"),
+        )
+        dec_1.context.attach_mc(mc_1)
+        dec_mc_1 = dec_1.set_up_azure_monitor_profile(mc_1)
+
+        self.assertIsNotNone(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_metrics)
+        self.assertTrue(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_metrics.enabled)
+        self.assertEqual(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_metrics.http_port, 8080)
+        self.assertEqual(dec_mc_1.azure_monitor_profile.app_monitoring.open_telemetry_metrics.grpc_port, 8081)
+
+    def test_deprecated_and_new_logs_flag_conflict(self):
+        """Test that using both old and new logs flags raises an error."""
+        ctx = AKSPreviewManagedClusterContext(
+            self.cmd,
+            AKSManagedClusterParamDict({
+                "enable_opentelemetry_logs": True,
+                "enable_opentelemetry_logs_traces": True,
+            }),
+            self.models,
+            decorator_mode=DecoratorMode.CREATE,
+        )
+        with self.assertRaises(MutuallyExclusiveArgumentError):
+            ctx.get_enable_opentelemetry_logs()
         # Test that container_insights.enabled=True when Azure Monitor logs are enabled
         dec_1 = AKSPreviewManagedClusterCreateDecorator(
             self.cmd,

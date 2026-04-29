@@ -1019,23 +1019,39 @@ def validate_location_resource_group_cluster_parameters(namespace):
 
 
 def validate_opentelemetry_ports(namespace):
-    """Validate that OpenTelemetry metrics and logs ports don't conflict."""
-    metrics_port = getattr(namespace, 'opentelemetry_metrics_port', None)
-    logs_port = getattr(namespace, 'opentelemetry_logs_port', None)
+    """Validate that OpenTelemetry ports don't conflict."""
+    # Resolve deprecated port params
+    metrics_port = getattr(namespace, 'opentelemetry_metrics_port_http', None) or \
+        getattr(namespace, 'opentelemetry_metrics_port', None)
+    logs_port = getattr(namespace, 'opentelemetry_logs_traces_port_http', None) or \
+        getattr(namespace, 'opentelemetry_logs_port', None)
+    metrics_grpc_port = getattr(namespace, 'opentelemetry_metrics_port_grpc', None)
+    logs_grpc_port = getattr(namespace, 'opentelemetry_logs_traces_port_grpc', None)
 
-    # Check if both ports are specified and are the same
-    if metrics_port is not None and logs_port is not None and metrics_port == logs_port:
-        raise ArgumentUsageError(
-            "OpenTelemetry metrics port and logs port cannot be the same. "
-            "Please specify different ports for --opentelemetry-metrics-port and --opentelemetry-logs-port."
-        )
+    # Collect all specified ports and validate ranges
+    all_ports = []
+    for port, port_name in [
+        (metrics_port, 'metrics HTTP'),
+        (logs_port, 'logs/traces HTTP'),
+        (metrics_grpc_port, 'metrics gRPC'),
+        (logs_grpc_port, 'logs/traces gRPC'),
+    ]:
+        if port is not None:
+            if not (1 <= port <= 65535):
+                raise ArgumentUsageError(
+                    f"OpenTelemetry {port_name} port must be between 1 and 65535, got {port}."
+                )
+            all_ports.append((port, port_name))
 
-    # Validate port ranges
-    for port, port_name in [(metrics_port, 'metrics'), (logs_port, 'logs')]:
-        if port is not None and not (1 <= port <= 65535):
+    # Check for duplicate ports
+    seen = {}
+    for port, port_name in all_ports:
+        if port in seen:
             raise ArgumentUsageError(
-                f"OpenTelemetry {port_name} port must be between 1 and 65535, got {port}."
+                f"OpenTelemetry {port_name} port and {seen[port]} port cannot be the same ({port}). "
+                "Please specify different ports."
             )
+        seen[port] = port_name
 
 
 def validate_opentelemetry_metrics_dependencies(namespace):
@@ -1080,21 +1096,21 @@ def validate_opentelemetry_metrics_dependencies_for_update(namespace):
 
 def validate_opentelemetry_logs_dependencies(namespace):
     """Validate OpenTelemetry logs dependencies for create operations."""
-    enable_otlp_logs = getattr(namespace, 'enable_opentelemetry_logs', False)
-    disable_otlp_logs = getattr(namespace, 'disable_opentelemetry_logs', False)
+    enable_otlp_logs = getattr(namespace, 'enable_opentelemetry_logs_traces', False) or \
+        getattr(namespace, 'enable_opentelemetry_logs', False)
+    disable_otlp_logs = getattr(namespace, 'disable_opentelemetry_logs_traces', False) or \
+        getattr(namespace, 'disable_opentelemetry_logs', False)
     enable_azure_monitor_logs = getattr(namespace, 'enable_azure_monitor_logs', False)
     enable_addons = getattr(namespace, 'enable_addons', None)
 
     # Check mutual exclusion
     if enable_otlp_logs and disable_otlp_logs:
         raise MutuallyExclusiveArgumentError(
-            "Cannot specify both --enable-opentelemetry-logs and --disable-opentelemetry-logs at the same time."
+            "Cannot specify both --enable-opentelemetry-logs-traces and "
+            "--disable-opentelemetry-logs-traces at the same time."
         )
 
     # Check if trying to enable OTLP logs without Azure Monitor
-    # For create operations, require explicit Azure Monitor enablement via either:
-    # 1. --enable-azure-monitor-logs
-    # 2. --enable-addons monitoring
     azure_monitor_logs_enabled = (enable_azure_monitor_logs or
                                   (enable_addons and 'monitoring' in enable_addons))
 
@@ -1107,13 +1123,16 @@ def validate_opentelemetry_logs_dependencies(namespace):
 
 def validate_opentelemetry_logs_dependencies_for_update(namespace):
     """Validate OpenTelemetry logs dependencies for update operations."""
-    enable_otlp_logs = getattr(namespace, 'enable_opentelemetry_logs', False)
-    disable_otlp_logs = getattr(namespace, 'disable_opentelemetry_logs', False)
+    enable_otlp_logs = getattr(namespace, 'enable_opentelemetry_logs_traces', False) or \
+        getattr(namespace, 'enable_opentelemetry_logs', False)
+    disable_otlp_logs = getattr(namespace, 'disable_opentelemetry_logs_traces', False) or \
+        getattr(namespace, 'disable_opentelemetry_logs', False)
 
     # Check mutual exclusion
     if enable_otlp_logs and disable_otlp_logs:
         raise MutuallyExclusiveArgumentError(
-            "Cannot specify both --enable-opentelemetry-logs and --disable-opentelemetry-logs at the same time."
+            "Cannot specify both --enable-opentelemetry-logs-traces and "
+            "--disable-opentelemetry-logs-traces at the same time."
         )
     # For update operations, validation is deferred to the decorator where we have access
     # to the cluster's Azure Monitor profile

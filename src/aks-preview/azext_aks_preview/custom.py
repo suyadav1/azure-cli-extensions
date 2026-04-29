@@ -1140,13 +1140,18 @@ def aks_create(
     # opentelemetry parameters
     enable_opentelemetry_metrics=False,
     opentelemetry_metrics_port=None,
+    opentelemetry_metrics_port_http=None,
+    opentelemetry_metrics_port_grpc=None,
     disable_opentelemetry_metrics=False,
     enable_opentelemetry_logs=False,
+    enable_opentelemetry_logs_traces=False,
     opentelemetry_logs_port=None,
+    opentelemetry_logs_traces_port_http=None,
+    opentelemetry_logs_traces_port_grpc=None,
     disable_opentelemetry_logs=False,
+    disable_opentelemetry_logs_traces=False,
     # metrics profile
     enable_cost_analysis=False,
-    # AI toolchain operator
     enable_ai_toolchain_operator=False,
     # azure container storage
     enable_azure_container_storage=None,
@@ -1366,10 +1371,16 @@ def aks_update(
     # opentelemetry parameters
     enable_opentelemetry_metrics=False,
     opentelemetry_metrics_port=None,
+    opentelemetry_metrics_port_http=None,
+    opentelemetry_metrics_port_grpc=None,
     disable_opentelemetry_metrics=False,
     enable_opentelemetry_logs=False,
+    enable_opentelemetry_logs_traces=False,
     opentelemetry_logs_port=None,
+    opentelemetry_logs_traces_port_http=None,
+    opentelemetry_logs_traces_port_grpc=None,
     disable_opentelemetry_logs=False,
+    disable_opentelemetry_logs_traces=False,
     enable_vpa=False,
     disable_vpa=False,
     enable_optimized_addon_scaling=False,
